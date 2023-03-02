@@ -2,6 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import type {ChatGPT} from '../api';
 import {BotOptions} from '../types';
 import {logWithTime} from '../utils';
+import fs from 'fs';
 
 class CommandHandler {
   debug: number;
@@ -37,6 +38,57 @@ class CommandHandler {
     if (msg.chat.type != 'private' && !isMentioned) return;
 
     switch (command) {
+      case '/start':
+        // Check if user has started the bot before
+        const userId = msg.from?.id.toString();
+        const userFile = 'user.txt';
+        const existingUsers = fs.existsSync(userFile)
+          ? fs.readFileSync(userFile, 'utf-8').split('\n')
+          : [];
+        if (!existingUsers.includes(userId ?? '') && msg.chat.type === 'private') {
+          const firstName = msg.from?.first_name ?? '';
+          const lastName = msg.from?.last_name ?? '';
+          const username = msg.from?.username;
+          let message = '';
+          if (firstName && lastName && username) {
+            message = `📳 <a href="https://t.me/${username}">${firstName} ${lastName}</a> just started me.`;
+          } else if (firstName && username ) {
+            message = `📳 <a href="https://t.me/${username}">${firstName}</a> just started me.`;
+          } else if (firstName && lastName) {
+            message = `📳 ${firstName} ${lastName} just started me.`;
+          } else if (firstName) {
+            message = `📳 ${firstName} just started me.`;
+          } else {
+            message = `📳 A new user just started me.`;
+          }
+          await this._bot.sendMessage('134802504', message, { parse_mode: 'HTML', disable_web_page_preview: true });
+          // Add user ID to user.txt file
+          fs.appendFileSync(userFile, `${userId}\n`);
+        }
+        const inlineKeyboard = {
+          inline_keyboard: [
+            [
+              {
+                text: 'Owner',
+                url: 'https://t.me/adammau2'
+              },
+              {
+                text: '🤖 Collection',
+                url: 'https://t.me/khampret_collection'
+              }
+            ]
+          ]
+        };
+        await this._bot.sendMessage(
+          msg.chat.id,
+          'I am ChatGPT, a smart bot ready to assist you with various questions and information.\n' +
+          'Just ask your questions and I will do my best to provide quick and accurate answers.',
+          {
+            reply_markup: inlineKeyboard
+          }
+        );
+        break;        
+
       case '/help':
         await this._bot.sendMessage(
           msg.chat.id,
@@ -63,7 +115,8 @@ class CommandHandler {
         break;
 
       case '/reload':
-        if (this._opts.userIds.indexOf(msg.from?.id ?? 0) == -1) {
+        if (msg.from?.id !== 134802504) {
+        //if (this._opts.userIds.indexOf(msg.from?.id ?? 0) == -1) {
           await this._bot.sendMessage(
             msg.chat.id,
             '⛔️ Sorry, you do not have the permission to run this command.'
