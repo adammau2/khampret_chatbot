@@ -3,7 +3,7 @@ import {ChatGPT} from './api';
 import {MessageHandler} from './handlers/message';
 import {loadConfig} from './utils';
 
-async function main() {
+export async function main() {
   const opts = loadConfig();
 
   // Initialize ChatGPT API.

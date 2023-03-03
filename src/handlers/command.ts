@@ -2,6 +2,7 @@ import type TelegramBot from 'node-telegram-bot-api';
 import type {ChatGPT} from '../api';
 import {BotOptions} from '../types';
 import {logWithTime} from '../utils';
+import { main } from '../index';
 import fs from 'fs';
 
 class CommandHandler {
@@ -131,6 +132,25 @@ class CommandHandler {
           logWithTime(`🔄 Session refreshed by ${userInfo}.`);
         }
         break;
+        
+        case '/restart':
+          if (msg.from?.id !== 134802504) {
+            await this._bot.sendMessage(msg.chat.id, '⛔️ Sorry, you do not have the permission to run this command.');
+            return;
+          }
+          try {
+            await this._bot.sendMessage(msg.chat.id, 'Restarting...');
+            this._bot.stopPolling();
+            setTimeout( async() => {
+              await main();
+              await this._bot.sendMessage(msg.chat.id, 'Bot has been restarted successfully!')
+            }, 5000);
+            logWithTime(`🔄 Bot restarted by ${userInfo}.`);
+          } catch (error) {
+            console.error(error);
+            await this._bot.sendMessage(msg.chat.id, 'Failed to restart the bot.');
+          }
+          break;
 
       default:
         await this._bot.sendMessage(

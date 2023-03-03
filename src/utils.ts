@@ -75,6 +75,7 @@ function loadConfig(): Config {
     debug: tryGet<number>('debug') || 1,
     bot: {
       token: config.get<string>('bot.token'),
+      ownerId: tryGet<number[]>('bot.ownerId') || [],
       userIds: tryGet<number[]>('bot.userIds') || [],
       groupIds: tryGet<number[]>('bot.groupIds') || [],
       chatCmd: tryGet<string>('bot.chatCmd') || '/chat',
